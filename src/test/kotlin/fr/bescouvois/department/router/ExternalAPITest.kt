@@ -1,5 +1,6 @@
 package fr.bescouvois.department.router
 
+import com.ninjasquad.springmockk.MockkBean
 import fr.bescouvois.department.TestUtils.Companion.d1
 import fr.bescouvois.department.TestUtils.Companion.d2
 import fr.bescouvois.department.TestUtils.Companion.d3
@@ -8,16 +9,15 @@ import fr.bescouvois.department.TestUtils.Companion.r2
 import fr.bescouvois.department.model.Department
 import fr.bescouvois.department.model.Region
 import fr.bescouvois.department.service.DepartmentService
+import io.mockk.coEvery
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.test.context.junit.jupiter.SpringExtension
@@ -39,10 +39,10 @@ internal class ExternalAPITest {
     }
 
     @Autowired
-    lateinit var client: WebTestClient
+    private lateinit var client: WebTestClient
 
-    @MockBean
-    lateinit var departmentService: DepartmentService
+    @MockkBean
+    private lateinit var departmentService: DepartmentService
 
     @Nested
     @DisplayName("GET $BASE_URL")
@@ -50,7 +50,7 @@ internal class ExternalAPITest {
 
         @Test
         fun `should return all the departments`() {
-            Mockito.`when`(departmentService.getAll()).thenReturn(Flux.just(d1, d2, d3))
+            coEvery { departmentService.getAll() } returns Flux.just(d1, d2, d3)
 
             val result = client.get()
                     .uri(BASE_URL)
@@ -66,7 +66,7 @@ internal class ExternalAPITest {
 
         @Test
         fun `should return an empty list`() {
-            Mockito.`when`(departmentService.getAll()).thenReturn(Flux.empty())
+            coEvery { departmentService.getAll() } returns Flux.empty()
 
             val result = client.get()
                     .uri(BASE_URL)
@@ -81,8 +81,8 @@ internal class ExternalAPITest {
 
         @Test
         fun `should return an error`() {
-            Mockito.`when`(departmentService.getAll()).thenReturn(
-                    Flux.error(ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR)))
+            coEvery { departmentService.getAll() } returns
+                    Flux.error(ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR))
 
             client.get()
                     .uri("$BASE_URL")
@@ -103,7 +103,7 @@ internal class ExternalAPITest {
 
         @Test
         fun `should return all the regions`() {
-            Mockito.`when`(departmentService.getAllByRegion()).thenReturn(Flux.just(r1, r2))
+            coEvery { departmentService.getAllByRegion() } returns Flux.just(r1, r2)
 
             val result = client.get()
                     .uri("$BASE_URL/region")
@@ -119,7 +119,7 @@ internal class ExternalAPITest {
 
         @Test
         fun `should return an empty list`() {
-            Mockito.`when`(departmentService.getAllByRegion()).thenReturn(Flux.empty())
+            coEvery { departmentService.getAllByRegion() } returns Flux.empty()
 
             val result = client.get()
                     .uri("$BASE_URL/region")
@@ -135,8 +135,8 @@ internal class ExternalAPITest {
 
         @Test
         fun `should return an error`() {
-            Mockito.`when`(departmentService.getAllByRegion()).thenReturn(
-                    Flux.error(ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR)))
+            coEvery { departmentService.getAllByRegion() } returns
+                    Flux.error(ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR))
 
             client.get()
                     .uri("$BASE_URL/region")
@@ -157,7 +157,7 @@ internal class ExternalAPITest {
 
         @Test
         fun `should return the department`() {
-            Mockito.`when`(departmentService.getByNum(d2.num)).thenReturn(Mono.just(d2))
+            coEvery { departmentService.getByNum(d2.num) } returns Mono.just(d2)
 
             val result = client.get()
                     .uri("$BASE_URL/${d2.num}")
@@ -173,7 +173,7 @@ internal class ExternalAPITest {
 
         @Test
         fun `should return not found`() {
-            Mockito.`when`(departmentService.getByNum("999")).thenReturn(Mono.empty())
+            coEvery { departmentService.getByNum("999") } returns Mono.empty()
 
             client.get()
                     .uri("$BASE_URL/999")
@@ -184,8 +184,8 @@ internal class ExternalAPITest {
 
         @Test
         fun `should return an error`() {
-            Mockito.`when`(departmentService.getByNum(d1.num)).thenReturn(
-                    Mono.error(ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR)))
+            coEvery { departmentService.getByNum(d1.num) } returns
+                    Mono.error(ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR))
 
             client.get()
                     .uri("$BASE_URL/${d1.num}")

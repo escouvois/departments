@@ -3,6 +3,8 @@ package fr.bescouvois.department.handler
 import fr.bescouvois.department.model.Department
 import fr.bescouvois.department.model.Region
 import fr.bescouvois.department.service.DepartmentService
+import kotlinx.coroutines.reactive.awaitFirst
+import kotlinx.coroutines.reactive.awaitSingle
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.ServerRequest
@@ -16,17 +18,18 @@ import reactor.core.publisher.Mono
 @Component
 class DepartmentHandler(private val service: DepartmentService) {
 
-    fun all(request: ServerRequest) =
-            ok().body(service.getAll().handleInternalError(), Department::class.java)
+    suspend fun all(request: ServerRequest): ServerResponse =
+            ok().body(service.getAll().handleInternalError(), Department::class.java).awaitFirst()
 
-    fun byId(request: ServerRequest) =
+    suspend fun byId(request: ServerRequest): ServerResponse =
             service.getByNum(request.pathVariable("num"))
                     .flatMap(ok()::bodyValue)
                     .switchIfEmpty(notFound().build())
                     .handleInternalError()
+                    .awaitSingle()
 
-    fun allByRegion(request: ServerRequest) =
-            ok().body(service.getAllByRegion().handleInternalError(), Region::class.java)
+    suspend fun allByRegion(request: ServerRequest): ServerResponse =
+            ok().body(service.getAllByRegion().handleInternalError(), Region::class.java).awaitFirst()
 
     private fun Flux<*>.handleInternalError() =
             this.onErrorMap { ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR) }
