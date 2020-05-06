@@ -7,12 +7,13 @@ import fr.bescouvois.department.model.DepartmentJSON
 import fr.bescouvois.department.repository.DepartmentRepository
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.boot.context.event.ApplicationReadyEvent
+import org.springframework.context.event.EventListener
 import org.springframework.core.io.ResourceLoader
 import org.springframework.stereotype.Component
 import reactor.kotlin.core.publisher.toFlux
 import java.io.FileReader
 import java.lang.invoke.MethodHandles
-import javax.annotation.PostConstruct
 
 @Component
 class DataLoader(private val rs: ResourceLoader,
@@ -20,7 +21,7 @@ class DataLoader(private val rs: ResourceLoader,
 
     private val logger: Logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
 
-    @PostConstruct
+    @EventListener(ApplicationReadyEvent::class)
     fun load() {
         val listDepartmentType = object : TypeToken<List<DepartmentJSON>>() {}.type
         val file = rs.getResource("classpath:departements-region.json").file
