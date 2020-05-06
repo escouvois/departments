@@ -1,8 +1,6 @@
 package fr.bescouvois.department.model
 
 import com.google.gson.annotations.SerializedName
-import com.mongodb.client.model.Aggregates
-import org.bson.BSON
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
 
