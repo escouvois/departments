@@ -4,6 +4,9 @@ import com.ninjasquad.springmockk.MockkBean
 import fr.bescouvois.department.TestUtils.Companion.d1
 import fr.bescouvois.department.TestUtils.Companion.d2
 import fr.bescouvois.department.TestUtils.Companion.d3
+import fr.bescouvois.department.TestUtils.Companion.p1
+import fr.bescouvois.department.TestUtils.Companion.p2
+import fr.bescouvois.department.TestUtils.Companion.p3
 import fr.bescouvois.department.TestUtils.Companion.r1
 import fr.bescouvois.department.TestUtils.Companion.r2
 import fr.bescouvois.department.model.Department
@@ -20,6 +23,7 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType.APPLICATION_JSON
+import org.springframework.http.MediaType.APPLICATION_STREAM_JSON
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
@@ -195,6 +199,61 @@ internal class ExternalAPITest {
                     .expectBody()
                     .jsonPath("$.timestamp").isNotEmpty
                     .jsonPath("$.path").isEqualTo("$BASE_URL/${d1.num}")
+                    .jsonPath("$.status").isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .jsonPath("$.error").isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.reasonPhrase)
+        }
+    }
+
+    @Nested
+    @DisplayName("GET $BASE_URL/{num}/population")
+    inner class GetPopulationByNum {
+
+        @Test
+        fun `should stream the population trends of the department`() {
+            coEvery { departmentService.getPopulationByNum(d2.num) } returns Flux.just(p1, p2, p3)
+
+            val result = client.get()
+                    .uri("$BASE_URL/${d2.num}/population")
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectHeader().contentType(APPLICATION_STREAM_JSON)
+                    .returnResult<Department>()
+
+            StepVerifier.create(result.responseBody)
+                    .expectNext(p1)
+                    .expectNext(p2)
+                    .expectNext(p3)
+                    .verifyComplete()
+        }
+
+        @Test
+        fun `should return an empty list`() {
+            coEvery { departmentService.getPopulationByNum("999") } returns Flux.empty()
+
+            client.get()
+                    .uri("$BASE_URL/999/population")
+                    .accept(APPLICATION_STREAM_JSON)
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectHeader().contentType(APPLICATION_STREAM_JSON)
+                    .expectBody().isEmpty
+        }
+
+        @Test
+        fun `should return an error`() {
+            coEvery { departmentService.getPopulationByNum(d1.num) } returns
+                    Flux.error(ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR))
+
+            val uri = "$BASE_URL/${d1.num}/population"
+            client.get()
+                    .uri(uri)
+                    .accept(APPLICATION_STREAM_JSON)
+                    .exchange()
+                    .expectStatus().is5xxServerError
+                    .expectHeader().contentType(APPLICATION_JSON)
+                    .expectBody()
+                    .jsonPath("$.timestamp").isNotEmpty
+                    .jsonPath("$.path").isEqualTo(uri)
                     .jsonPath("$.status").isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .jsonPath("$.error").isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.reasonPhrase)
         }

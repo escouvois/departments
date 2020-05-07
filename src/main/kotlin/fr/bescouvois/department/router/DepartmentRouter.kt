@@ -13,6 +13,7 @@ class DepartmentRouter {
             GET("/", handler::all)
             GET("/region", handler::allByRegion)
             GET("/{num}", handler::byId)
+            GET("/{num}/population", handler::getPopulationByDepartment)
         }
     }
 }

@@ -11,5 +11,9 @@ class TestUtils {
 
         val r1 = Region("Nouvelle-Aquitaine", listOf("Haute-Vienne", "Corrèze"))
         val r2 = Region("Guyane", listOf("Guyane"))
+        
+        val p1 = Department(id = "111-111", num = "87", name = "Haute-Vienne", region = "Nouvelle-Aquitaine", population = 10)
+        val p2 = Department(id = "111-111", num = "87", name = "Haute-Vienne", region = "Nouvelle-Aquitaine", population = 20)
+        val p3 = Department(id = "111-111", num = "87", name = "Haute-Vienne", region = "Nouvelle-Aquitaine", population = 30)
     }
 }

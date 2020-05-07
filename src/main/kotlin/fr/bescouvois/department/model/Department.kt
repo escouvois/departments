@@ -7,7 +7,8 @@ data class Department(
         val id: String? = null,
         val num: String,
         val name: String,
-        val region: String
+        val region: String,
+        var population: Long = 0
 ) {
     companion object {
         fun mapToDepartment(dep: DepartmentJSON) =

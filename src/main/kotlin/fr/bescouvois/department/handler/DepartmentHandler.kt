@@ -6,6 +6,7 @@ import fr.bescouvois.department.service.DepartmentService
 import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitSingle
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
@@ -30,6 +31,11 @@ class DepartmentHandler(private val service: DepartmentService) {
 
     suspend fun allByRegion(request: ServerRequest): ServerResponse =
             ok().body(service.getAllByRegion().handleInternalError(), Region::class.java).awaitFirst()
+
+    suspend fun getPopulationByDepartment(request: ServerRequest): ServerResponse =
+            ok().contentType(MediaType.APPLICATION_STREAM_JSON)
+                    .body(service.getPopulationByNum(request.pathVariable("num")).handleInternalError(), Department::class.java)
+                    .awaitFirst()
 
     private fun Flux<*>.handleInternalError() =
             this.onErrorMap { ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR) }

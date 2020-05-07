@@ -18,6 +18,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
+import java.time.Duration
 
 @ExtendWith(SpringExtension::class)
 @WebFluxTest(DepartmentService::class)
@@ -102,6 +103,32 @@ internal class DepartmentServiceTest {
             Mockito.`when`(departmentRepository.findAllByRegion()).thenReturn(Flux.empty())
 
             StepVerifier.create(departmentRepository.findAllByRegion())
+                    .expectNextCount(0)
+                    .verifyComplete()
+        }
+    }
+
+    @Nested
+    @DisplayName("get population by department")
+    inner class GetPopulationByDepartment {
+
+        @Test
+        fun `should stream the population trends of the department`() {
+            Mockito.`when`(departmentRepository.findByNum(d1.num)).thenReturn(Mono.just(d1))
+            Mockito.`when`(departmentRepository.save(d1)).thenReturn(Mono.just(d1))
+
+            StepVerifier.withVirtualTime { departmentService.getPopulationByNum(d1.num).take(10) }
+                    .thenAwait(Duration.ofHours(1))
+                    .expectNextCount(10)
+                    .verifyComplete()
+        }
+
+        @Test
+        fun `should return an empty flux`() {
+            Mockito.`when`(departmentRepository.findByNum("999")).thenReturn(Mono.empty())
+
+            StepVerifier.withVirtualTime { departmentService.getPopulationByNum("999").take(10) }
+                    .thenAwait(Duration.ofHours(1))
                     .expectNextCount(0)
                     .verifyComplete()
         }
